@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="example-pkg-YOUR-USERNAME-HERE", # Replace with your own username
+    name="django-login-phone", 
     version="0.0.1",
     author="Sepehr Hasanabadi",
     author_email="mse.hasanabadi@gmail.com",

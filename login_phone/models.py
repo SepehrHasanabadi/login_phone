@@ -1,3 +1,52 @@
-from django.db import models
+# Standard Library
+import uuid
 
-# Create your models here.
+# Third Party Stuff
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
+from django.core.validators import RegexValidator
+from .validators import PhoneNumberRegexValidator
+
+
+class UUIDModel(models.Model):
+    """ An abstract base class model that makes primary key `id` as UUID
+    instead of default auto incremented number.
+    """
+
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+
+    class Meta:
+        abstract = True
+
+
+class TimeStampedUUIDModel(UUIDModel):
+    """ An abstract base class model that provides self-updating
+    ``created`` and ``modified`` fields with UUID as primary_key field.
+    """
+
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    modified_at = models.DateTimeField(auto_now=True, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class SMSVerification(TimeStampedUUIDModel):
+    security_code = models.CharField(_("Security Code"), max_length=120)
+    phone_number = models.CharField(
+		max_length=15,
+		required=True,
+		validators=[PhoneNumberRegexValidator]
+	)
+    attempts = models.IntegerField(default=0)
+    is_verified = models.BooleanField(_("Security Code Verified"), default=False)
+
+    class Meta:
+        db_table = "sms_verification"
+        verbose_name = _("SMS Verification")
+        verbose_name_plural = _("SMS Verifications")
+        ordering = ("-modified_at",)
+        unique_together = ("security_code", "phone_number")
+
+    def __str__(self):
+        return "{}: {}".format(str(self.phone_number), self.security_code)
